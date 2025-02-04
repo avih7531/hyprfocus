@@ -1,4 +1,5 @@
 #include "Log.hpp"
+#include <hyprland/src/SharedDefs.hpp>
 #include <hyprland/src/devices/IPointer.hpp>
 #include <hyprland/src/helpers/WLClasses.hpp>
 
@@ -169,8 +170,12 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
                               Hyprlang::INT{1});
   HyprlandAPI::addConfigValue(PHANDLE, "plugin:hyprfocus:focus_animation",
                               Hyprlang::STRING("flash"));
-  HyprlandAPI::addDispatcher(PHANDLE, "animatefocused", &flashCurrentWindow);
 
+  HyprlandAPI::addDispatcherV2(PHANDLE, "animatefocused",
+                               [](std::string arg) -> SDispatchResult {
+                                 flashCurrentWindow(arg);
+                                 return {};
+                               });
   g_mAnimations["flash"] = std::make_unique<CFlash>();
   g_mAnimations["shrink"] = std::make_unique<CShrink>();
   g_mAnimations["none"] = std::make_unique<IFocusAnimation>();
@@ -181,7 +186,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
   }
 
   HyprlandAPI::reloadConfig();
-  g_pConfigManager->tick();
+  //  g_pConfigManager->tick();
   hyprfocus_log(LOG, "Reloaded config");
 
   // Register callbacks

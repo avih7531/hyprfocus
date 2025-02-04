@@ -5,6 +5,9 @@
 #include <hyprland/src/desktop/Window.hpp>
 #include <hyprland/src/managers/AnimationManager.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
+#include <hyprutils/memory/SharedPtr.hpp>
+
+using Hyprutils::Animation::SAnimationPropertyConfig;
 
 void CFlash::init(HANDLE pHandle, std::string animationName) {
   IFocusAnimation::init(pHandle, animationName);
@@ -33,17 +36,25 @@ void CFlash::onWindowFocus(PHLWINDOW pWindow, HANDLE pHandle) {
   static const auto *flash_opacity =
       (Hyprlang::FLOAT *const *)(getConfigValue(pHandle, "flash_opacity")
                                      ->getDataStaticPtr());
-  pWindow->m_fAlpha = **flash_opacity;
+  pWindow->m_fAlpha->setValue(**flash_opacity);
   // pWindow->m_fAlpha = g_fFlashOpacity;
-  pWindow->m_fAlpha.setConfig(&m_sFocusInAnimConfig);
-  pWindow->m_fAlpha.setCallbackOnEnd([this, pWindow, pHandle](void *) {
-    static const auto *active_opacity =
-        (Hyprlang::FLOAT *const *)(HyprlandAPI::getConfigValue(
-                                       pHandle, "decoration:active_opacity")
-                                       ->getDataStaticPtr());
-    // Make sure we restore to the active window opacity
-    pWindow->m_fAlpha = **active_opacity;
-    // pWindow->m_fAlpha = g_fActiveOpacity;
-    pWindow->m_fAlpha.setConfig(&m_sFocusOutAnimConfig);
-  });
+  pWindow->m_fAlpha->setConfig(Hyprutils::Memory::makeShared<
+                               Hyprutils::Animation::SAnimationPropertyConfig>(
+      m_sFocusInAnimConfig));
+
+  pWindow->m_fAlpha->setCallbackOnEnd(
+      [this, pWindow, pHandle](Hyprutils::Memory::CWeakPointer<
+                               Hyprutils::Animation::CBaseAnimatedVariable>
+                                   weakPtr) {
+        static const auto *active_opacity =
+            (Hyprlang::FLOAT *const *)(HyprlandAPI::getConfigValue(
+                                           pHandle, "decoration:active_opacity")
+                                           ->getDataStaticPtr());
+
+        pWindow->m_fAlpha->setValue(**active_opacity);
+        pWindow->m_fAlpha->setConfig(
+            Hyprutils::Memory::makeShared<
+                Hyprutils::Animation::SAnimationPropertyConfig>(
+                m_sFocusOutAnimConfig));
+      });
 }

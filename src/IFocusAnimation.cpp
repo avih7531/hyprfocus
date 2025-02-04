@@ -4,6 +4,8 @@
 #include <hyprland/src/plugins/PluginAPI.hpp>
 #include <hyprlang.hpp>
 
+using Hyprutils::Animation::SAnimationPropertyConfig;
+
 void IFocusAnimation::init(HANDLE pHandle, std::string animationName) {
   m_szAnimationName = animationName;
   hyprfocus_log(LOG, "Initializing focus animation: {}", animationName);
@@ -23,14 +25,17 @@ void IFocusAnimation::init(HANDLE pHandle, std::string animationName) {
   m_sFocusInAnimConfig.internalEnabled = 1;
   m_sFocusInAnimConfig.internalStyle =
       std::string("hyprfocus_") + animationName + std::string("_in");
-  m_sFocusInAnimConfig.pValues = &m_sFocusInAnimConfig;
 
+  m_sFocusInAnimConfig.pValues = Hyprutils::Memory::makeShared<
+      Hyprutils::Animation::SAnimationPropertyConfig>(m_sFocusInAnimConfig);
   m_sFocusOutAnimConfig =
       *(g_pConfigManager->getAnimationPropertyConfig("global"));
   m_sFocusOutAnimConfig.internalEnabled = 1;
   m_sFocusOutAnimConfig.internalStyle =
       std::string("hyprfocus_") + animationName + std::string("_out");
-  m_sFocusOutAnimConfig.pValues = &m_sFocusOutAnimConfig;
+
+  m_sFocusOutAnimConfig.pValues = Hyprutils::Memory::makeShared<
+      Hyprutils::Animation::SAnimationPropertyConfig>(m_sFocusOutAnimConfig);
 }
 
 void IFocusAnimation::setup(HANDLE pHandle, std::string animationName) {

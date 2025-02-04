@@ -1,9 +1,12 @@
 #pragma once
 
 #include <hyprlang.hpp>
+#include <hyprutils/animation/AnimationConfig.hpp>
 #define WLR_USE_UNSTABLE
 
 #include <hyprland/src/config/ConfigManager.hpp>
+
+using Hyprutils::Animation::SAnimationPropertyConfig;
 
 class IFocusAnimation {
 public:
